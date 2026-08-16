@@ -19,3 +19,6 @@ app/.flutter-plugins-dependencies
 app/ios/Pods/
 app/android/.gradle/
 app/android/local.properties
+app/.dart_tool/
+app/build/
+app/pubspec.lock
