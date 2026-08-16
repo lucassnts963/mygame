@@ -3,6 +3,7 @@ import {
   canCollect,
   collectClue,
   createGameState,
+  grantClue,
   notebook,
   unlockedCharacters,
   visibleClues,
@@ -120,6 +121,38 @@ describe("collectClue", () => {
 
     const { state } = collectClue(def, before, "pista-cantaro", BARCARENA);
     expect(ids(visibleClues(def, state))).toEqual(["pista-pegadas"]);
+  });
+});
+
+describe("grantClue", () => {
+  const def = solvableCase();
+
+  it("TEST-16: concede pista com âncora sem exigir posição (UC-01 Alt-02)", () => {
+    // Quando a informação vem da boca de um personagem, mandar o jogador até o lugar é absurdo.
+    const { state, verdict } = grantClue(def, createGameState(def), "pista-cantaro");
+    expect(verdict).toMatchObject({ ok: true, reason: "ok" });
+    expect(state.collectedClues).toEqual(["pista-cantaro"]);
+  });
+
+  it("TEST-14: conceder NÃO burla os pré-requisitos", () => {
+    // Burlar a geografia é o ponto; burlar o grafo de dedução destruiria o caso.
+    const { state, verdict } = grantClue(def, createGameState(def), "pista-pegadas");
+    expect(verdict).toMatchObject({ ok: false, reason: "locked" });
+    expect(state.collectedClues).toEqual([]);
+  });
+
+  it("TEST-18: conceder é idempotente", () => {
+    const once = grantClue(def, createGameState(def), "pista-cantaro").state;
+    const { state, verdict } = grantClue(def, once, "pista-cantaro");
+    expect(verdict).toMatchObject({ ok: true, reason: "already-collected" });
+    expect(state.collectedClues).toEqual(["pista-cantaro"]);
+  });
+
+  it("TEST-15: conceder id inexistente é recusado", () => {
+    expect(grantClue(def, createGameState(def), "pista-fantasma").verdict).toMatchObject({
+      ok: false,
+      reason: "unknown-clue",
+    });
   });
 });
 

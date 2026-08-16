@@ -103,6 +103,33 @@ export function collectClue(
   };
 }
 
+/**
+ * Concede uma pista **sem** verificar posição — o caminho de quando um personagem a entrega em
+ * conversa (UC-01 Alt-02), em vez de o detetive achá-la andando.
+ *
+ * É uma operação distinta de `collectClue` de propósito. Uma pista com âncora existe num lugar,
+ * e é o geofence que dá sentido ao deslocamento; mas quando a informação vem da boca de alguém,
+ * exigir que o jogador vá até o lugar seria absurdo. O que **não** muda é o resto da regra:
+ * pré-requisitos continuam valendo e a coleta continua idempotente — conceder não é burlar o
+ * grafo de dedução, é só burlar a geografia.
+ */
+export function grantClue(caseDef: CaseDefinition, state: GameState, clueId: string): CollectResult {
+  const clue = findClue(caseDef, clueId);
+  if (!clue) return { state, verdict: { ok: false, reason: "unknown-clue" } };
+
+  if (state.collectedClues.includes(clueId)) {
+    return { state, verdict: { ok: true, reason: "already-collected" } };
+  }
+
+  const missing = missingPrerequisites(clue, state.collectedClues);
+  if (missing.length > 0) return { state, verdict: { ok: false, reason: "locked", missing } };
+
+  return {
+    state: { ...state, collectedClues: [...state.collectedClues, clueId] },
+    verdict: { ok: true, reason: "ok" },
+  };
+}
+
 /** Pistas que o mapa deve mostrar agora: desbloqueadas e ainda não coletadas (REQ-01). */
 export function visibleClues(caseDef: CaseDefinition, state: GameState): readonly ClueDefinition[] {
   const unlocked = unlockedClueIds(caseDef, state.collectedClues);

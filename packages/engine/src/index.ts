@@ -20,6 +20,7 @@ export {
   collectClue,
   createGameState,
   effectiveAnchor,
+  grantClue,
   notebook,
   unlockedCharacters,
   visibleClues,
