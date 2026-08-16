@@ -1,0 +1,76 @@
+# O Cântaro Abandonado — caso piloto do Vestígio
+#
+# Baseado em João 4:1-42, o encontro no poço de Jacó. O mistério NÃO reescreve a passagem:
+# ela é o pano de fundo, e o que se investiga é uma pergunta que o texto deixa em aberto —
+# por que a mulher deixou o cântaro para trás (João 4:28).
+#
+# As âncoras estão em Barcarena/PA por padrão. Para jogar em outra cidade, a partida define
+# outra `origin`: o motor translada todas as pistas preservando as distâncias entre elas
+# (REQ-19), então o desenho do caso sobrevive à mudança.
+
+id: poco-de-jaco
+title: O Cântaro Abandonado
+synopsis: >-
+  Ao meio-dia, na hora em que ninguém vai buscar água, uma mulher deixou seu cântaro no poço
+  e saiu correndo para a cidade. O cântaro continua lá. Descubra por quê.
+
+origin: { lat: -1.5089, lng: -48.6247 }
+
+clues:
+  - id: pista-cantaro
+    title: O cântaro abandonado
+    description: >-
+      Um cântaro de barro, cheio, largado na borda do poço. Quem enche um cântaro e o abandona
+      cheio não desistiu da água por acaso — foi interrompido por algo maior que a sede.
+    anchor: { lat: -1.5089, lng: -48.6247, radius: 25 }
+    unlocks_characters: [samaritana]
+    lore: objetos/o-cantaro
+
+  - id: pista-hora-errada
+    title: A hora errada
+    description: >-
+      A sombra é curta demais: é meio-dia. Mulheres tiram água de manhã ou ao entardecer, em
+      grupo. Vir sozinha na hora mais quente é escolha de quem prefere o calor à companhia.
+    requires: [pista-cantaro]
+    anchor: { lat: -1.5096, lng: -48.6239, radius: 25 }
+    unlocks_characters: [discipulo]
+    lore: lugares/poco-de-jaco
+
+  - id: pista-pegadas
+    title: Pegadas em direção à cidade
+    description: >-
+      Duas trilhas de pegadas. Uma chega ao poço sem pressa. A outra sai em passadas largas,
+      na direção de Sicar — e é a que não passa de volta pelo cântaro.
+    requires: [pista-hora-errada]
+    anchor: { lat: -1.5081, lng: -48.6253, radius: 30 }
+    unlocks_characters: []
+    lore: lugares/estrada-de-sicar
+
+  # Sem âncora: esta pista não está em lugar nenhum do mapa. Ela só existe na boca da
+  # personagem, e só sai de lá quando o detetive chega com as outras três na mão.
+  - id: pista-confissao
+    title: O que ela mesma disse
+    description: >-
+      "Vinde, vede um homem que me disse tudo quanto tenho feito." Ela não fugiu do cântaro:
+      ela largou tudo para ir chamar a cidade.
+    requires: [pista-pegadas]
+    unlocks_characters: []
+    lore: casos/o-cantaro-abandonado
+
+characters:
+  - id: samaritana
+    name: A mulher de Samaria
+    requires: [pista-cantaro]
+    agent: agents/samaritana.agent.yaml
+
+  - id: discipulo
+    name: Um dos discípulos
+    requires: [pista-hora-errada]
+    agent: agents/discipulo.agent.yaml
+
+solution:
+  culprit: samaritana
+  # Acertar "foi ela" é fácil: são dois personagens. O que o caso cobra é a dedução completa —
+  # o cântaro abandonado E a razão dele. Sem as duas, a acusação é palpite (REQ-10).
+  supporting_clues: [pista-cantaro, pista-confissao]
+  reveal: casos/a-verdade
