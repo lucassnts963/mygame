@@ -1,0 +1,31 @@
+{
+  "name": "vestigio",
+  "version": "0.1.0",
+  "description": "Vestígio — jogo de mistério com mapa, realidade aumentada geolocalizada e personagens-agentes de IA.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "server"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "playtest": "node --experimental-strip-types packages/engine/src/cli/playtest.ts",
+    "validate-module": "node --experimental-strip-types packages/module-schema/src/cli/validate.ts",
+    "check": "node scripts/check-consistency.mjs",
+    "changelog": "node scripts/update-changelog.mjs",
+    "changelog:check": "node scripts/update-changelog.mjs --check",
+    "skills:index": "node scripts/update-skills-index.mjs",
+    "skills:index:check": "node scripts/update-skills-index.mjs --check",
+    "session": "node scripts/session-context.mjs",
+    "release": "node scripts/cut-release.mjs"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
