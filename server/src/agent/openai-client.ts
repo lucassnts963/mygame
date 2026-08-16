@@ -4,7 +4,11 @@ export interface ChatClient {
   complete(messages: readonly ChatMessage[], tools: readonly ToolSpec[]): Promise<ChatMessage>;
 }
 
-type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
+/**
+ * Assinatura mínima de `fetch` que o cliente usa. Mais estreita que `typeof fetch` de propósito:
+ * é o que um servidor falso precisa implementar para substituí-lo nos testes (NFR-04).
+ */
+export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
 /**
  * Cliente de um endpoint **compatível com a API da OpenAI** (ADR-007).

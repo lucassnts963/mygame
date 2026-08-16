@@ -63,7 +63,7 @@ describe("resolveProvider", () => {
     expect(() => resolveProvider({ env })).toThrow(/nenhum provider/i);
   });
 
-  it("TEST-09: variável de ambiente ausente é erro nomeando a variável", () => {
+  it("TEST-09: sem nenhum nível utilizável, erro nomeando a variável que falta", () => {
     expect(() =>
       resolveProvider({ server: { ...serverDefault, apiKeyEnv: "VESTIGIO_NAO_DEFINIDA" }, env }),
     ).toThrow(/VESTIGIO_NAO_DEFINIDA/);
@@ -73,6 +73,53 @@ describe("resolveProvider", () => {
     expect(() =>
       resolveProvider({ server: serverDefault, env: { VESTIGIO_SERVER_KEY: "" } }),
     ).toThrow(/VESTIGIO_SERVER_KEY/);
+  });
+
+  it("TEST-09: nível com chave ausente é PULADO, não fatal — é o que torna módulos compartilháveis", () => {
+    // A Samaritana declara a chave do autor do módulo. Essa variável existe na máquina dele e em
+    // mais nenhuma. Falhar aqui tornaria todo módulo publicado injogável por outra pessoa.
+    const resolved = resolveProvider({
+      character: {
+        baseUrl: "https://personagem.exemplo/v1",
+        model: "modelo-do-autor",
+        apiKeyEnv: "VESTIGIO_CHAVE_DO_AUTOR",
+      },
+      server: serverDefault,
+      env, // não contém VESTIGIO_CHAVE_DO_AUTOR
+    });
+
+    expect(resolved.model).toBe("modelo-do-servidor");
+    expect(resolved.apiKey.reveal()).toBe("sk-do-servidor");
+  });
+
+  it("TEST-09: pula quantos níveis forem necessários", () => {
+    const resolved = resolveProvider({
+      character: { baseUrl: "https://p.exemplo/v1", model: "p", apiKeyEnv: "NAO_EXISTE_A" },
+      module: { baseUrl: "https://m.exemplo/v1", model: "m", apiKeyEnv: "NAO_EXISTE_B" },
+      server: serverDefault,
+      env,
+    });
+    expect(resolved.model).toBe("modelo-do-servidor");
+  });
+
+  it("TEST-08: a mensagem de erro diz o que foi pulado e por quê", () => {
+    expect(() =>
+      resolveProvider({
+        character: { baseUrl: "https://p.exemplo/v1", model: "p", apiKeyEnv: "NAO_EXISTE_A" },
+        server: { ...serverDefault, apiKeyEnv: "NAO_EXISTE_B" },
+        env,
+      }),
+    ).toThrow(/NAO_EXISTE_A[\s\S]*NAO_EXISTE_B/);
+  });
+
+  it("TEST-09: um modelo local sem chave nunca é pulado", () => {
+    // Sem apiKeyEnv não há o que faltar — é assim que se aponta para Ollama ou llama.cpp.
+    const resolved = resolveProvider({
+      character: { baseUrl: "http://localhost:11434/v1", model: "llama3" },
+      server: serverDefault,
+      env,
+    });
+    expect(resolved.model).toBe("llama3");
   });
 
   it("TEST-09: aceita provider sem chave — um modelo local não precisa de uma", () => {
