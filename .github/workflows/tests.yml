@@ -1,0 +1,41 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Testes com cobertura
+        run: npm run test:coverage
+      # O módulo piloto é conteúdo, e conteúdo apodrece calado: um requires renomeado
+      # não quebra teste nenhum, só quebra a partida de quem for jogar.
+      - name: Validar o módulo piloto
+        run: npm run validate-module -- modules/poco-de-jaco
+      - name: Provar que o caso piloto fecha
+        run: npm run playtest -- modules/poco-de-jaco
+
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter analyze
+        working-directory: app
+      - run: flutter test
+        working-directory: app

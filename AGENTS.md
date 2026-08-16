@@ -130,9 +130,15 @@ OpenAI-compatible falso, em memória: testes determinísticos, sem rede e sem cu
 
 ## Known Gaps
 
-- Persistência real em Postgres ainda não implementada (repositórios em memória no MVP).
+- **Persistência**: sessões vivem em memória e se perdem ao reiniciar o servidor. O repositório
+  já é uma interface, então o Postgres entra sem tocar em rotas nem no motor.
+- **Chat sem streaming**: a resposta do personagem volta inteira. SSE fica para quando houver
+  necessidade real de ver o texto aparecendo.
+- **Autenticação**: o MVP identifica a partida pelo id de sessão; não há login.
 - Sem multiplayer, sem marketplace de módulos, sem MCP externo — backlog dos requisitos 001.
-- AR sem detecção de plano (ARCore/ARKit) — decisão registrada em ADR-004.
+- AR sem detecção de plano (ARCore/ARKit) — decisão registrada em ADR-005.
+- **Não validado em campo**: o raio de 25 m foi escolhido por raciocínio sobre erro típico de GPS,
+  não por playtest na rua. É a primeira coisa a calibrar com o aparelho na mão.
 
 ## Observations for agents
 

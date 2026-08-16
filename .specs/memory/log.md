@@ -50,4 +50,38 @@ Template — copy, set today's date, append at the bottom:
 - **Refs:** CHG-014, commit 9f3a1c2, TRB-002 (lazy-cursor gotcha).
 -->
 
-_No entries yet. The first work session appends the first block above._
+## 2026-08-16 — Vestígio do zero: fundação, motor, módulos, agentes, API e app (CHG-001..006)
+
+- **Did:** Repositório vazio → jogo jogável de ponta a ponta. `spec-kit init` (metodologia 1.2.0),
+  ADR-001..009, requisitos 001 (REQ-01..20, NFR-01..08). Depois, em TDD: `packages/engine`
+  (CHG-001), `packages/module-schema` (CHG-002), runtime de agentes (CHG-003), API Fastify
+  (CHG-004), app Flutter (CHG-005) e o módulo piloto do Poço de Jacó (CHG-006). Somam 310 testes
+  TypeScript e 52 Dart. Quatro skills novas de jogo: `create-case`, `create-character-agent`,
+  `validate-module`, `playtest-case`. CI passou a rodar testes, cobertura, validação do módulo e
+  `flutter analyze`/`test`, além dos gates da metodologia.
+
+- **Learned:**
+  1. **A cascata de providers tinha que pular, não falhar.** Ela falhava duro quando a variável de
+     ambiente do nível escolhido não existia. Como um `agent.yaml` declara a chave do *autor* do
+     módulo, isso tornaria todo módulo compartilhado injogável por qualquer outra pessoa — o
+     oposto do que ADR-007 e ADR-009 se propõem. Só apareceu nos testes de integração da API;
+     os testes unitários do runtime passavam felizes. Corrigido em CHG-004.
+  2. **Faltava ao motor a operação "conceder".** `collectClue` exige posição para pista com
+     âncora, mas o UC-01 Alt-02 diz que pista revelada por NPC dispensa posição. `grantClue`
+     burla a geografia e **não** os pré-requisitos. Achado ao implementar CHG-003.
+  3. **Página `spoiler` é sempre órfã, e isso é correto.** O lint de lore acusava órfã toda página
+     de solução — ruído em cima da página mais bem colocada do módulo. Elas são excluídas da
+     checagem de órfã, e também da contagem de páginas navegáveis.
+  4. **Excluir spoiler na origem, não na resposta.** O índice de lore nunca indexa a solução, em
+     vez de filtrá-la depois. A diferença é entre "o agente não deve contar" e "o agente não tem
+     como contar" — e só a segunda resiste a *prompt injection* pela conversa.
+  5. `erasableSyntaxOnly` do TS proíbe *parameter properties* (`constructor(readonly x)`), o que
+     obriga a declarar campos de classe à mão. Vale a pena: é o que deixa `node --experimental-strip-types`
+     rodar o código sem passo de build.
+
+- **Next:** persistência real em Postgres (hoje as sessões são em memória e se perdem ao
+  reiniciar); streaming SSE no chat; e um playtest de campo do caso piloto para calibrar o raio de
+  25 m em rua aberta versus área com prédios.
+
+- **Refs:** CHG-001..006, requisitos 001, ADR-001..009, commits `1a9ec7c`, `72f9480`, `324fc5f`,
+  `922c1f9`, `5dde59a`, `415f616`, `e9fb86b`, `41a8988`.
