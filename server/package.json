@@ -1,0 +1,17 @@
+{
+  "name": "@vestigio/server",
+  "version": "0.1.0",
+  "description": "API do jogo e runtime dos personagens-agentes (provider OpenAI-compatible, BYOK).",
+  "type": "module",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "node --experimental-strip-types --watch src/main.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@vestigio/engine": "*",
+    "@vestigio/module-schema": "*",
+    "fastify": "^5.2.0"
+  }
+}

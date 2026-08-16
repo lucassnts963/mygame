@@ -81,6 +81,51 @@ Template for new entries:
 
 ---
 
+## Domínio — `@vestigio/engine`
+
+Funções puras, sem I/O (ADR-004). **Toda** regra de jogo nasce aqui, e é daqui que o servidor,
+o playtest e o validador de módulos a consomem. Antes de escrever regra nova, procure nesta tabela.
+
+### Geo — `packages/engine/src/geo.ts`
+
+| Function | Purpose | Signature |
+|---|---|---|
+| `distanceMeters` | Distância de grande círculo (Haversine) | `(a: LatLng, b: LatLng) => number` |
+| `bearingDegrees` | Rumo inicial em [0, 360) — base do posicionamento em AR | `(from: LatLng, to: LatLng) => number` |
+| `isWithinGeofence` | Posição está no raio da âncora? (borda inclusiva) | `(position: LatLng, anchor: Anchor) => boolean` |
+| `resolveAnchor` | Reposiciona a âncora para a origem da partida, preservando distâncias (REQ-19) | `(anchor, caseOrigin, sessionOrigin) => Anchor` |
+
+### Grafo de pistas — `packages/engine/src/clue-graph.ts`
+
+| Function | Purpose | Signature |
+|---|---|---|
+| `missingPrerequisites` | O que falta no caderno para liberar a pista | `(clue, collected) => readonly string[]` |
+| `unlockedClueIds` | Pistas com pré-requisitos satisfeitos | `(caseDef, collected) => readonly string[]` |
+| `reachableClueIds` | Ponto fixo: tudo que um detetive perfeito alcança | `(caseDef) => readonly string[]` |
+| `validateClueGraph` | Integridade estrutural do caso (ciclo, órfã, raio, solução) | `(caseDef) => readonly GraphIssue[]` |
+| `MIN_RADIUS_METERS` / `MAX_RADIUS_METERS` | Limites de raio, espelhando `.specs/config.md## Game Constants` | `number` |
+
+### Estado da partida — `packages/engine/src/game-state.ts`
+
+| Function | Purpose | Signature |
+|---|---|---|
+| `createGameState` | Estado inicial, opcionalmente relocado | `(caseDef, options?) => GameState` |
+| `canCollect` | Veredito explicado de coleta (nunca booleano) | `(caseDef, state, clueId, position?) => CollectVerdict` |
+| `collectClue` | Coleta idempotente; devolve estado novo ou o mesmo objeto | `(caseDef, state, clueId, position?) => CollectResult` |
+| `effectiveAnchor` | Âncora já reposicionada para a origem da partida | `(caseDef, state, clue) => Anchor \| undefined` |
+| `visibleClues` | O que o mapa mostra agora (REQ-01) | `(caseDef, state) => readonly ClueDefinition[]` |
+| `unlockedCharacters` | Quem já pode ser interrogado | `(caseDef, state) => readonly CharacterRef[]` |
+| `notebook` | Caderno: pista coletada + o que ela destravou | `(caseDef, state) => readonly NotebookEntry[]` |
+
+### Acusação e playtest
+
+| Function | Path | Purpose | Signature |
+|---|---|---|---|
+| `judgeAccusation` | `src/accusation.ts` | Julga a acusação única, exigindo sustentação | `(caseDef, state, culprit) => AccusationResult` |
+| `playtestCase` | `src/playtest.ts` | Percorre o caso simulado e diz se ele fecha | `(caseDef, options?) => PlaytestReport` |
+
+---
+
 ## Utilities / Helpers
 
 Pure functions in `src/utils/` or `src/helpers/`. No side effects.

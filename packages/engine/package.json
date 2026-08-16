@@ -1,0 +1,11 @@
+{
+  "name": "@vestigio/engine",
+  "version": "0.1.0",
+  "description": "Domínio puro do Vestígio: grafo de pistas, estado da partida, geofence e julgamento da acusação. Sem I/O.",
+  "type": "module",
+  "private": true,
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

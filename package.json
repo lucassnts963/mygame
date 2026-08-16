@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "playtest": "node --experimental-strip-types packages/engine/src/cli/playtest.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "playtest": "node --experimental-strip-types packages/module-schema/src/cli/playtest.ts",
     "validate-module": "node --experimental-strip-types packages/module-schema/src/cli/validate.ts",
     "check": "node scripts/check-consistency.mjs",
     "changelog": "node scripts/update-changelog.mjs",
@@ -24,8 +25,9 @@
     "release": "node scripts/cut-release.mjs"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.8",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.10"
   }
 }

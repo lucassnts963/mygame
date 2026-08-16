@@ -1,0 +1,15 @@
+{
+  "name": "@vestigio/module-schema",
+  "version": "0.1.0",
+  "description": "Contrato do bundle de módulo do Vestígio: schemas de case.yaml e agent.yaml, validador de SKILL.md e lint de lore.",
+  "type": "module",
+  "private": true,
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "yaml": "^2.6.1"
+  }
+}
