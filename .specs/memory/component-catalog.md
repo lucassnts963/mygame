@@ -126,6 +126,30 @@ o playtest e o validador de módulos a consomem. Antes de escrever regra nova, p
 
 ---
 
+## Contrato de módulo — `@vestigio/module-schema`
+
+O que valida o conteúdo criado por um jogador. **`loader.ts` é o único arquivo do pacote que toca
+o disco**; todo o resto recebe strings e devolve `Diagnostic[]`, o que mantém a validação testável
+sem fixtures.
+
+| Function | Path | Purpose | Signature |
+|---|---|---|---|
+| `parseFrontmatter` | `src/frontmatter.ts` | Lê o bloco `---` de um Markdown; nunca lança | `(text: string) => Frontmatter` |
+| `validateSkill` | `src/skill-validator.ts` | `SKILL.md` contra `.specs/config.md## Skill Format` | `(folder, content) => Diagnostic[]` |
+| `scanForSecrets` | `src/secret-scan.ts` | Segredo literal em qualquer arquivo do bundle | `(file, content) => Diagnostic[]` |
+| `lintLore` | `src/lore-lint.ts` | Lint de `lore/WIKI_SCHEMA.md## Lint` | `(pages: LorePage[]) => Diagnostic[]` |
+| `isSpoiler` | `src/lore-lint.ts` | A página revela a solução? | `(page: LorePage) => boolean` |
+| `validateCaseDocument` / `validateAgentDocument` | `src/schemas/index.ts` | Validação por JSON Schema (ajv) | `(document, file) => Diagnostic[]` |
+| `toCaseDefinition` | `src/schemas/index.ts` | YAML `snake_case` do autor → tipos do motor | `(doc: CaseDocument) => CaseDefinition` |
+| `loadModule` | `src/loader.ts` | Lê um bundle inteiro do disco | `(root: string) => LoadedModule` |
+| `validateModule` | `src/validate.ts` | Carrega e valida; junta todos os diagnósticos | `(root: string) => Diagnostic[]` |
+| `validateLoadedModule` | `src/validate.ts` | Idem, sobre um módulo já em memória | `(loaded: LoadedModule) => Diagnostic[]` |
+
+Schemas em `src/schemas/definitions.ts` (`caseSchema`, `agentSchema`). CLIs em `src/cli/`
+(`validate.ts`, `playtest.ts`), com a impressão compartilhada em `cli/report.ts`.
+
+---
+
 ## Utilities / Helpers
 
 Pure functions in `src/utils/` or `src/helpers/`. No side effects.
