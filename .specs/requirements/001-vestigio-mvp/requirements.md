@@ -261,9 +261,31 @@ Explicitamente **fora** do MVP (não é "não vai existir" — é "não agora"):
 - Detecção de plano (ARCore/ARKit), oclusão, objetos 3D elaborados
 - Voz: TTS para os personagens e STT para o detetive
 - Editor visual de módulos
-- Persistência definitiva em Postgres (o MVP usa repositórios em memória; o schema-alvo já fica
-  documentado em `.specs/shared/schema-target.md`)
 - Modo offline completo
+
+### Cortes registrados depois da primeira entrega (2026-08-17)
+
+A revisão de alinhamento da entrega 1 expôs decisões que foram tomadas nas specs mas nunca
+voltaram para cá. Registrar é o ponto: um corte que só existe na cabeça de quem cortou reaparece
+como "requisito não atendido" seis meses depois.
+
+- **REQ-06 — streaming da resposta do personagem.** A conversa funciona; a fala chega inteira em
+  vez de aparecer palavra a palavra. SSE foi cortado em `CHG-004` por não haver, na época, app
+  para consumi-lo. **Aceito como parcial**; entra quando a presença do personagem for o gargalo.
+- **REQ-19 — exposição da origem configurável na interface.** O mecanismo está entregue e testado
+  no motor e na API (dá para abrir partida em qualquer cidade via `POST /sessions`), mas o app
+  ainda não oferece a escolha ao jogador. **Aceito como parcial** por ser `Should`.
+
+E dois que **não** são cortes, e sim dívida com prazo — ambos fechados na entrega 2:
+
+- **REQ-13 — chave cifrada em repouso.** A cifra AES-256-GCM e o mascaramento existem e são
+  testados, mas nada guarda a chave de ninguém, porque não havia conta de jogador. Fecha em
+  `CHG-008`.
+- **REQ-04 — vestígio sobre a câmera.** O cálculo de rumo está correto e testado, mas o fundo da
+  tela de AR é um retângulo neutro em vez da imagem da câmera. Fecha em `CHG-009`.
+
+> A persistência em Postgres saiu desta lista: era "fora de escopo" no MVP e passou a ser a
+> entrega 2 (`CHG-007`).
 
 ---
 
