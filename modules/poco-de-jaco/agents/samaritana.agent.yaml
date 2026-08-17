@@ -24,8 +24,8 @@ persona: |
 voice: seca no começo, desconfiada, cansada do calor; mais aberta conforme percebe que ele já sabe
 
 provider:
-  base_url: https://api.openai.com/v1
-  model: gpt-4o-mini
+  base_url: https://api.deepseek.com
+  model: deepseek-v4-flash
   api_key_env: VESTIGIO_SAMARITANA_KEY
   temperature: 0.8
   max_tokens: 200
