@@ -67,6 +67,9 @@ export function toCaseDefinition(document: CaseDocument): CaseDefinition {
     solution: {
       culprit: document.solution.culprit,
       supportingClues: [...document.solution.supporting_clues],
+      // Segundo campo que o schema aceitava e o domínio descartava, depois da `description`.
+      // Sem esta linha o epílogo do caso fica escrito no módulo e inalcançável para quem joga.
+      ...(document.solution.reveal ? { reveal: document.solution.reveal } : {}),
     },
   };
 }

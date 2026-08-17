@@ -403,6 +403,151 @@ describe("GET /modules", () => {
   });
 });
 
+describe("desfecho do caso", () => {
+  /** Percorre tudo e arranca a confissão, deixando a partida pronta para acusar com prova. */
+  async function fullyInformed() {
+    app = build([
+      { toolCalls: [{ name: "revelar_pista", arguments: { pista: "pista-confissao" } }] },
+      { content: "Fui chamar a cidade." },
+    ]);
+    const { id } = await openSession();
+    await walkTheCase(id);
+    await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/characters/samaritana/chat`,
+      payload: { message: "Por que você correu?" },
+    });
+    return id;
+  }
+
+  it("TEST-13: outcome ausente enquanto a partida não terminou", async () => {
+    const { id } = await openSession();
+    await collect(id, "pista-cantaro", AT.cantaro);
+
+    const body = (await app.inject({ method: "GET", url: `/sessions/${id}` })).json();
+    expect(body.outcome).toBeUndefined();
+  });
+
+  it("TEST-11: NENHUMA resposta contém o texto da solução antes da acusação", async () => {
+    // O teste mais importante desta spec. A página de epílogo é `spoiler: true` e só pode chegar
+    // ao jogador depois da acusação — antes disso, um jogador curioso lendo a API não pode achá-la.
+    const { id } = await openSession();
+
+    const respostas = [
+      await app.inject({ method: "GET", url: "/modules" }),
+      await app.inject({ method: "GET", url: `/sessions/${id}` }),
+      await collect(id, "pista-cantaro", AT.cantaro),
+      await collect(id, "pista-hora-errada", AT.hora),
+      await collect(id, "pista-pegadas", AT.pegadas),
+      await app.inject({
+        method: "POST",
+        url: `/sessions/${id}/characters/samaritana/chat`,
+        payload: { message: "Quem foi?" },
+      }),
+      await app.inject({ method: "GET", url: `/sessions/${id}` }),
+    ];
+
+    for (const resposta of respostas) {
+      expect(resposta.body).not.toContain("cântaro continua no poço");
+      expect(resposta.body).not.toContain("a-verdade");
+      expect(resposta.body.toLowerCase()).not.toContain("epilogue");
+    }
+  });
+
+  it("TEST-12: depois de acusar certo, o outcome traz o epílogo", async () => {
+    const id = await fullyInformed();
+    const response = await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "samaritana" },
+    });
+
+    const outcome = response.json().outcome;
+    expect(outcome.verdict).toBe("solved");
+    expect(outcome.culprit).toBe("samaritana");
+    expect(outcome.epilogue).toContain("cântaro continua no poço");
+  });
+
+  it("TEST-12: o epílogo entregue não contém a nota de autoria", async () => {
+    const id = await fullyInformed();
+    const response = await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "samaritana" },
+    });
+
+    const epilogue = response.json().outcome.epilogue as string;
+    expect(epilogue).not.toContain("NOTA DE AUTORIA");
+    expect(epilogue).not.toContain("ADR-006");
+    expect(epilogue).not.toContain("spoiler");
+  });
+
+  it("TEST-14: ERRAR também traz o epílogo — o caso acabou de qualquer forma", async () => {
+    const { id } = await openSession();
+    await collect(id, "pista-cantaro", AT.cantaro);
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "discipulo" },
+    });
+
+    // 409 porque o veredito é negativo, mas o desfecho vem junto.
+    expect(response.statusCode).toBe(409);
+    const outcome = response.json().view.outcome;
+    expect(outcome.verdict).toBe("wrong");
+    expect(outcome.accused).toBe("discipulo");
+    expect(outcome.culprit).toBe("samaritana");
+    expect(outcome.epilogue).toContain("cântaro continua no poço");
+  });
+
+  it("TEST-14: acertar sem prova é unsupported, e também recebe o desfecho", async () => {
+    const { id } = await openSession();
+    await collect(id, "pista-cantaro", AT.cantaro);
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "samaritana" },
+    });
+
+    const outcome = response.json().view.outcome;
+    expect(outcome.verdict).toBe("unsupported");
+    expect(outcome.epilogue).toBeTruthy();
+  });
+
+  it("TEST-12: o desfecho lista o que ficou para trás", async () => {
+    const { id } = await openSession();
+    await collect(id, "pista-cantaro", AT.cantaro);
+    const response = await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "samaritana" },
+    });
+
+    const outcome = response.json().view.outcome;
+    expect(outcome.missedClues.map((c: { id: string }) => c.id)).toContain("pista-pegadas");
+    // As perdidas vêm com o texto: é recompensa por terminar, não spoiler.
+    expect(outcome.missedClues[0].description).toBeTruthy();
+    expect(outcome.missedCharacters.map((c: { id: string }) => c.id)).toContain("discipulo");
+  });
+
+  it("TEST-12: o desfecho continua acessível depois, em modo leitura", async () => {
+    const id = await fullyInformed();
+    await app.inject({
+      method: "POST",
+      url: `/sessions/${id}/accuse`,
+      payload: { culprit: "samaritana" },
+    });
+
+    const body = (await app.inject({ method: "GET", url: `/sessions/${id}` })).json();
+    expect(body.outcome.verdict).toBe("solved");
+    expect(body.outcome.epilogue).toBeTruthy();
+    // E o caderno continua lá — nada do que o jogador construiu é descartado.
+    expect(body.notebook.length).toBeGreaterThan(0);
+  });
+});
+
 describe("tratamento de erro", () => {
   it("TEST-11: rota inexistente vira 404, não 500", async () => {
     expect((await app.inject({ method: "GET", url: "/rota-que-nao-existe" })).statusCode).toBe(404);

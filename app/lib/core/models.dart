@@ -86,6 +86,67 @@ class Accusation {
       Accusation(culprit: json['culprit'] as String, reason: json['reason'] as String);
 }
 
+/// O veredito terminal de uma partida.
+enum OutcomeVerdict { solved, unsupported, wrong }
+
+/// O desfecho do caso: o que o detetive concluiu, reuniu e deixou para trás.
+class CaseOutcome {
+  final OutcomeVerdict verdict;
+
+  /// Quem o jogador apontou.
+  final String accused;
+
+  /// Quem era de fato — informado inclusive a quem errou.
+  final String culprit;
+
+  /// O texto do epílogo, quando o caso declara um.
+  final String? epilogue;
+
+  final List<NotebookEntry> foundClues;
+
+  /// O que ficou no mapa. Vem com o texto: a partida acabou, não há o que proteger.
+  final List<Clue> missedClues;
+  final List<Character> missedCharacters;
+
+  const CaseOutcome({
+    required this.verdict,
+    required this.accused,
+    required this.culprit,
+    this.epilogue,
+    required this.foundClues,
+    required this.missedClues,
+    required this.missedCharacters,
+  });
+
+  /// A manchete do desfecho. Cada veredito é uma sensação diferente, não um rótulo.
+  String get headline => switch (verdict) {
+        OutcomeVerdict.solved => 'Você reconstruiu o que aconteceu.',
+        // O desfecho mais interessante do jogo: acertou a pessoa, não reuniu a prova.
+        OutcomeVerdict.unsupported => 'Você tinha razão. Não tinha a prova.',
+        OutcomeVerdict.wrong => 'Não foi quem você pensou.',
+      };
+
+  factory CaseOutcome.fromJson(Map<String, dynamic> json) => CaseOutcome(
+        verdict: switch (json['verdict'] as String?) {
+          'solved' => OutcomeVerdict.solved,
+          'unsupported' => OutcomeVerdict.unsupported,
+          _ => OutcomeVerdict.wrong,
+        },
+        accused: json['accused'] as String? ?? '',
+        culprit: json['culprit'] as String? ?? '',
+        epilogue: json['epilogue'] as String?,
+        foundClues: (json['foundClues'] as List? ?? [])
+            .map((e) => NotebookEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        missedClues: (json['missedClues'] as List? ?? [])
+            .map((e) => Clue.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        missedCharacters: (json['missedCharacters'] as List? ?? [])
+            .map((e) => Character.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 /// O estado da partida do ponto de vista do app.
 class SessionView {
   final String id;
@@ -96,6 +157,9 @@ class SessionView {
   final List<Character> characters;
   final Accusation? accusation;
 
+  /// Presente apenas depois da acusação — antes disso, o servidor não o envia.
+  final CaseOutcome? outcome;
+
   const SessionView({
     required this.id,
     required this.moduleId,
@@ -104,6 +168,7 @@ class SessionView {
     required this.notebook,
     required this.characters,
     this.accusation,
+    this.outcome,
   });
 
   bool get isFinished => accusation != null;
@@ -124,6 +189,9 @@ class SessionView {
         accusation: json['accusation'] == null
             ? null
             : Accusation.fromJson(json['accusation'] as Map<String, dynamic>),
+        outcome: json['outcome'] == null
+            ? null
+            : CaseOutcome.fromJson(json['outcome'] as Map<String, dynamic>),
       );
 }
 

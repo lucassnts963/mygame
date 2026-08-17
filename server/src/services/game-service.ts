@@ -1,4 +1,5 @@
 import {
+  caseOutcome,
   collectClue,
   createGameState,
   distanceMeters,
@@ -8,9 +9,11 @@ import {
   unlockedCharacters,
   visibleClues,
   type AccusationVerdict,
+  type CaseOutcome,
   type CollectVerdict,
   type LatLng,
 } from "@vestigio/engine";
+import { parseFrontmatter } from "@vestigio/module-schema";
 import { createChatClient, type FetchLike } from "../agent/openai-client.ts";
 import { resolveProvider } from "../agent/provider-resolution.ts";
 import { runAgentTurn } from "../agent/runtime.ts";
@@ -54,6 +57,14 @@ export interface SessionView {
   readonly notebook: ReturnType<typeof notebook>;
   readonly characters: readonly { readonly id: string; readonly name: string }[];
   readonly accusation: GameSession["state"]["accusation"];
+  /** O desfecho. **Presente apenas depois da acusação** — antes disso, ausente. */
+  readonly outcome?: OutcomeView;
+}
+
+/** O desfecho como o app o consome: o do motor, mais o epílogo já resolvido em texto. */
+export interface OutcomeView extends Omit<CaseOutcome, "reveal"> {
+  /** O texto da página de revelação, sem frontmatter. Ausente se o caso não declara uma. */
+  readonly epilogue?: string;
 }
 
 export function createGameService(deps: GameServiceDeps) {
@@ -76,6 +87,7 @@ export function createGameService(deps: GameServiceDeps) {
   const view = (session: GameSession, position?: LatLng): SessionView => {
     const module = requireModule(session.moduleId);
     const { caseDefinition } = module;
+    const outcome = outcomeView(module, session);
 
     return {
       id: session.id,
@@ -107,8 +119,43 @@ export function createGameService(deps: GameServiceDeps) {
         name: c.name,
       })),
       accusation: session.state.accusation,
+      ...(outcome ? { outcome } : {}),
     };
   };
+
+  /**
+   * Monta o desfecho, **e só quando a partida terminou**.
+   *
+   * É aqui que a disciplina do spoiler se inverte: a página de revelação nunca entrou no contexto
+   * de um agente e nunca foi indexada (ADR-006), e continua assim. O que muda é que, depois da
+   * acusação, ela vai para o jogador — que é para quem ela sempre foi escrita.
+   */
+  function outcomeView(module: GameModule, session: GameSession): OutcomeView | null {
+    const outcome = caseOutcome(module.caseDefinition, session.state);
+    if (!outcome) return null;
+
+    const { reveal, ...rest } = outcome;
+    const epilogue = reveal ? epilogueText(module, reveal) : undefined;
+    return { ...rest, ...(epilogue ? { epilogue } : {}) };
+  }
+
+  /**
+   * O corpo da página de revelação, sem o frontmatter e sem os comentários de autoria.
+   *
+   * Notas para quem escreve o módulo vivem em comentário HTML (ver
+   * `lore/WIKI_SCHEMA.md## Páginas de revelação`). Removê-las aqui, e não confiar no renderizador
+   * do app, garante que elas nunca cheguem nem pela API — nem para um cliente que renderize
+   * Markdown de outro jeito.
+   */
+  function epilogueText(module: GameModule, revealPath: string): string | undefined {
+    const page = module.loaded.lore.find((p) => p.path === revealPath);
+    // Um `reveal` apontando para página inexistente não derruba o desfecho: o veredito chega
+    // igual, só sem epílogo. O lint de módulo já reprova esse caso na validação.
+    if (!page) return undefined;
+
+    const body = parseFrontmatter(page.content).body.replace(/<!--[\s\S]*?-->/g, "").trim();
+    return body.length > 0 ? body : undefined;
+  }
 
   return {
     listModules: () =>

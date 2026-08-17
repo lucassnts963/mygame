@@ -12,11 +12,15 @@ class ClueCard extends StatelessWidget {
   final LatLng? position;
   final VoidCallback onInvestigate;
 
+  /// `false` depois da acusação: o caso acabou, e o mapa vira leitura.
+  final bool enabled;
+
   const ClueCard({
     super.key,
     required this.clue,
     required this.position,
     required this.onInvestigate,
+    this.enabled = true,
   });
 
   /// Distância até a pista, calculada aqui quando há posição — senão, a que o servidor mandou.
@@ -52,7 +56,7 @@ class ClueCard extends StatelessWidget {
         trailing: clue.isOnMap
             ? FilledButton(
                 key: Key('investigate-${clue.id}'),
-                onPressed: _inRange ? onInvestigate : null,
+                onPressed: _inRange && enabled ? onInvestigate : null,
                 child: const Text('Investigar'),
               )
             : null,

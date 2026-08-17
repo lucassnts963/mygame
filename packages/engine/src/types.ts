@@ -55,6 +55,13 @@ export interface SolutionDefinition {
   readonly culprit: string;
   /** Sem estas pistas no caderno, acertar o culpado é palpite — e palpite não resolve o caso. */
   readonly supportingClues: readonly string[];
+  /**
+   * Caminho da página de lore com o epílogo — a leitura completa do caso.
+   *
+   * A página é `spoiler: true`: nunca entra no contexto de um agente (ADR-006) e não é indexada.
+   * O que muda no fim é a direção: depois da acusação, e só depois, ela vai para o **jogador**.
+   */
+  readonly reveal?: string;
 }
 
 export interface CaseDefinition {
@@ -133,6 +140,24 @@ export interface NotebookEntry {
   readonly description?: string;
   readonly unlockedClues: readonly string[];
   readonly unlockedCharacters: readonly string[];
+}
+
+/** O veredito terminal de uma partida — os três que encerram o caso. */
+export type OutcomeVerdict = "solved" | "unsupported" | "wrong";
+
+/** O desfecho: o que o detetive concluiu, o que reuniu e o que deixou para trás. */
+export interface CaseOutcome {
+  readonly verdict: OutcomeVerdict;
+  /** Quem o jogador apontou. */
+  readonly accused: string;
+  /** Quem era de fato — informado inclusive a quem errou. */
+  readonly culprit: string;
+  readonly foundClues: readonly NotebookEntry[];
+  /** O que ficou no mapa. Vem com o texto: a partida acabou, não há o que proteger. */
+  readonly missedClues: readonly ClueDefinition[];
+  readonly missedCharacters: readonly CharacterRef[];
+  /** Caminho da página de epílogo, quando o caso declara uma. */
+  readonly reveal?: string;
 }
 
 export interface PlaytestReport {

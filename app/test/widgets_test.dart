@@ -8,6 +8,7 @@ import 'package:vestigio/core/geo.dart';
 import 'package:vestigio/core/location_service.dart';
 import 'package:vestigio/core/models.dart';
 import 'package:vestigio/features/map/clue_card.dart';
+import 'package:vestigio/features/map/map_screen.dart';
 import 'package:vestigio/features/notebook/clue_reveal_card.dart';
 import 'package:vestigio/features/notebook/notebook_view.dart';
 import 'package:vestigio/main.dart';
@@ -241,6 +242,71 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Tentar de novo'), findsOneWidget);
+    });
+  });
+
+  group('MapScreen depois do fim', () {
+    // Uma partida encerrada, sem pista ancorada visível — assim o mapa não tenta baixar tiles.
+    SessionView finished({CaseOutcome? outcome}) => SessionView(
+          id: 'sessao-1',
+          moduleId: 'poco-de-jaco',
+          caseTitle: 'O Cântaro Abandonado',
+          visibleClues: const [],
+          notebook: const [],
+          characters: const [Character(id: 'samaritana', name: 'A samaritana')],
+          accusation: const Accusation(culprit: 'samaritana', reason: 'solved'),
+          outcome: outcome,
+        );
+
+    Widget mapWith(SessionView view) => MaterialApp(
+          home: MapScreen(
+            api: GameApiClient(baseUrl: 'http://api.local', httpClient: _FakeModulesClient(const [])),
+            location: _SilentLocationService(),
+            initial: view,
+          ),
+        );
+
+    testWidgets('TEST-24: partida encerrada oferece ver o desfecho no lugar de acusar',
+        (tester) async {
+      await tester.pumpWidget(mapWith(finished(
+        outcome: const CaseOutcome(
+          verdict: OutcomeVerdict.solved,
+          accused: 'samaritana',
+          culprit: 'samaritana',
+          epilogue: 'O cântaro continua no poço, e vai continuar.',
+          foundClues: [],
+          missedClues: [],
+          missedCharacters: [],
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('open-outcome')), findsOneWidget);
+      // O botão cinza de acusar não sobra: ele era o jogo dizendo "acabou" sem dizer o que houve.
+      expect(find.byKey(const Key('open-accusation')), findsNothing);
+      expect(find.byKey(const Key('map-read-only')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('open-outcome')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('outcome-headline')), findsOneWidget);
+      expect(find.textContaining('continua no poço'), findsOneWidget);
+    });
+
+    testWidgets('TEST-24: partida em andamento continua oferecendo acusar', (tester) async {
+      await tester.pumpWidget(mapWith(const SessionView(
+        id: 'sessao-2',
+        moduleId: 'poco-de-jaco',
+        caseTitle: 'O Cântaro Abandonado',
+        visibleClues: [],
+        notebook: [],
+        characters: [],
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('open-accusation')), findsOneWidget);
+      expect(find.byKey(const Key('open-outcome')), findsNothing);
+      expect(find.byKey(const Key('map-read-only')), findsNothing);
     });
   });
 }

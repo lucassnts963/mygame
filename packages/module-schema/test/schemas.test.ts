@@ -149,6 +149,17 @@ describe("toCaseDefinition", () => {
     expect(def.clues[0]).not.toHaveProperty("description");
   });
 
+  it("TEST-09: mapeia solution.reveal — o caminho do epílogo", () => {
+    const doc = validCase();
+    (doc["solution"] as Record<string, unknown>)["reveal"] = "casos/a-verdade";
+
+    expect(toCaseDefinition(doc as never).solution.reveal).toBe("casos/a-verdade");
+  });
+
+  it("TEST-10: não inventa reveal quando o caso não declara um", () => {
+    expect(toCaseDefinition(validCase() as never).solution).not.toHaveProperty("reveal");
+  });
+
   it("TEST-18: preenche listas ausentes com vazio", () => {
     const doc = validCase();
     (doc["clues"] as Record<string, unknown>[])[1] = { id: "pista-solta", title: "Solta" };

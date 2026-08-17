@@ -28,5 +28,6 @@ export {
 export type { CollectResult, GameStateOptions } from "./game-state.ts";
 export { judgeAccusation } from "./accusation.ts";
 export type { AccusationResult } from "./accusation.ts";
+export { caseOutcome } from "./outcome.ts";
 export { playtestCase } from "./playtest.ts";
 export type { PlaytestOptions } from "./playtest.ts";

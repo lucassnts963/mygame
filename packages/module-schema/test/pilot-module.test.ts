@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { playtestCase } from "@vestigio/engine";
 import { describe, expect, it } from "vitest";
+import { parseFrontmatter } from "../src/frontmatter.ts";
 import { loadModule } from "../src/loader.ts";
 import { toCaseDefinition } from "../src/schemas/index.ts";
 import type { CaseDocument } from "../src/types.ts";
@@ -71,6 +72,33 @@ describe("módulo piloto — poco-de-jaco", () => {
       expect(clue.description, `pista '${clue.id}' sem descrição`).toBeTruthy();
       expect(clue.description!.length).toBeGreaterThan(40);
     }
+  });
+
+  it("TEST-16: declara reveal, e a página existe e é spoiler", () => {
+    const loaded = loadModule(PILOT);
+    const caseDef = toCaseDefinition(loaded.caseDocument as CaseDocument);
+
+    expect(caseDef.solution.reveal).toBeTruthy();
+    const page = loaded.lore.find((p) => p.path === caseDef.solution.reveal);
+    expect(page, `página '${caseDef.solution.reveal}' não existe na lore`).toBeDefined();
+    expect(page!.content).toContain("spoiler: true");
+  });
+
+  it("TEST-17: o corpo do epílogo é prosa para o jogador, sem nota de autoria", () => {
+    // O jogador lê este texto no momento em que o mistério fecha. Uma frase explicando ADR,
+    // requisito ou "esta página é spoiler" quebraria a imersão justamente ali.
+    const loaded = loadModule(PILOT);
+    const caseDef = toCaseDefinition(loaded.caseDocument as CaseDocument);
+    const page = loaded.lore.find((p) => p.path === caseDef.solution.reveal)!;
+
+    // Notas de autoria vivem em comentário HTML, que o Markdown não renderiza.
+    const visivel = parseFrontmatter(page.content).body.replace(/<!--[\s\S]*?-->/g, "");
+
+    expect(visivel).not.toMatch(/ADR-\d+/);
+    expect(visivel).not.toMatch(/REQ-\d+/);
+    expect(visivel).not.toMatch(/spoiler/i);
+    expect(visivel).not.toMatch(/PÁGINA SPOILER/i);
+    expect(visivel.trim().length).toBeGreaterThan(200);
   });
 
   it("acertar o culpado sem a sustentação não resolve o caso", () => {

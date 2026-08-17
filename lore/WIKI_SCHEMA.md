@@ -71,6 +71,27 @@ spoiler: false                             # true = página que revela a soluç�
   cânone**: o NPC não pode contradizê-la depois.
 - **`spoiler: true`** — a página é lida pelo motor (para julgar a acusação), nunca pelo agente.
   É assim que a verdade do caso fica fora do alcance de *prompt injection*.
+- **`audience: player`** — marca que o **corpo** desta página é prosa para quem joga. Obrigatório
+  na página apontada por `solution.reveal` (ver abaixo).
+
+## Páginas de revelação (`solution.reveal`)
+
+A página que o `case.yaml` aponta em `solution.reveal` é o **epílogo**: o texto que o jogador lê
+quando o caso termina. Ela é `spoiler: true` como qualquer verdade de caso — o agente nunca a vê —
+mas tem uma exigência a mais que as outras:
+
+> **O corpo é prosa para o jogador, do primeiro caractere ao último.**
+
+Nada de "esta página é spoiler", nada de referência a ADR, requisito ou motor. É o desfecho de um
+mistério chegando a quem passou a tarde andando pela cidade para merecê-lo; explicar a mecânica do
+jogo ali quebra a imersão no exato momento em que ela mais importa.
+
+Notas para quem escreve o módulo vão em **comentário HTML** (`<!-- … -->`) no fim do arquivo: o app
+renderiza Markdown, e comentário não é renderizado. É onde documentar por que a sustentação é
+aquela, que fonte embasa o quê, e o que um futuro autor precisa saber.
+
+O epílogo é entregue **somente depois da acusação**. Antes dela, o texto não aparece em nenhuma
+resposta da API — é o mesmo cuidado do índice de lore, só que na outra direção.
 
 ## Convenções
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_api_client.dart';
 import '../../core/models.dart';
+import '../outcome/outcome_screen.dart';
 
 /// A dedução final. Uma por caso — e a tela diz isso antes, não depois.
 class AccusationScreen extends StatefulWidget {
@@ -56,6 +57,22 @@ class _AccusationScreenState extends State<AccusationScreen> {
     try {
       final result = await widget.api.accuse(widget.sessionId, culprit);
       if (!mounted) return;
+
+      // O desfecho é a tela, não uma frase nesta. Acertando ou errando, a partida acabou e o
+      // jogador vai ler o que aconteceu — inclusive quem errou (decisão desta rodada).
+      final outcome = result.view?.outcome;
+      if (outcome != null) {
+        await Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) => OutcomeScreen(
+            caseTitle: result.view!.caseTitle,
+            outcome: outcome,
+          ),
+        ));
+        return;
+      }
+
+      // Sem desfecho no corpo, a acusação não terminou o caso — é recusa por regra (já acusou,
+      // personagem desconhecido). Aí sim a mensagem fica aqui.
       setState(() {
         _sending = false;
         _solved = !result.refused;

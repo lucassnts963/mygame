@@ -128,3 +128,44 @@ Template — copy, set today's date, append at the bottom:
 
 - **Refs:** CHG-007, CHG-009, requisitos 010, `alignment-review.md` de 001, commits `020b059`,
   `6b59efc`, `d44330f`.
+
+## 2026-08-17 — A tela de fim de caso, e o mesmo defeito pela segunda vez (CHG-011)
+
+- **Did:** `CHG-011` inteiro — `caseOutcome()` puro no motor, `solution.reveal` atravessando
+  módulo → domínio → API → app, `outcome` na visão da partida **só depois da acusação**, tela de
+  desfecho em Flutter com manchete própria por veredito, modo leitura no mapa, e a página
+  `casos/a-verdade` do piloto reescrita como prosa para o jogador. Prova manual de ponta a ponta
+  contra a API de verdade: acusação certa e sustentada, acusação errada, e reabrir a partida.
+  Ao final, a varredura prometida por campos de schema que o domínio não consome.
+
+- **Learned:**
+  1. **`reveal` era o mesmo defeito de `description`, com um agravante.** O epílogo do caso piloto
+     estava escrito, versionado e **inalcançável** — `toCaseDefinition` descartava o campo. A
+     primeira vez foi um achado; a segunda é um padrão. A varredura encontrou mais quatro campos
+     (`clues[].lore`, `agent.tools`, `agent.lore`, `characters[].agent`), documentados na spec.
+     Enquanto o schema for aberto por princípio (ADR-009), **"todo campo declarado tem consumidor"
+     tem de virar teste** — varrer à mão a cada duas specs não escala.
+  2. **`agent.lore` mente hoje.** O validador confere que a lista declarada não expõe spoiler, mas
+     o runtime entrega a lore inteira do módulo ao índice. Não é vazamento (spoiler continua
+     barrado na origem), é uma promessa de escopo não cumprida — e escopo por personagem é o que
+     dá textura a um elenco. Fica no backlog com nome e endereço.
+  3. **A disciplina do spoiler tem duas direções.** A mesma página que o agente nunca pode ver é
+     a que o jogador precisa ler no fim. O corte não é "quem", é "quando": antes da acusação o
+     texto não aparece em resposta nenhuma; depois, é o desfecho. O `TEST-11` varre o corpo de
+     todas as respostas anteriores justamente porque essa inversão é fácil de errar.
+  4. **Página de `reveal` é prosa, não documentação.** A do piloto começava explicando ao *autor*
+     que a página era spoiler e citando ADR — texto que ia direto para a tela do jogador no
+     momento de maior imersão. Nota de autoria agora vai em comentário HTML, e o servidor as
+     remove **antes** de responder, sem confiar no renderizador do app.
+  5. **O gate de cobertura reprovou de novo — e desta vez foi visto.** Branches em 89,66% com o
+     `exit: 1` conferido explicitamente (lição 4 da sessão anterior, aplicada). Fechado com
+     testes do que faltava de verdade: guarda de motivo não terminal no motor e os casos sem
+     epílogo, que o módulo piloto não representa. Terminou em 90,9%, `exit: 0`.
+
+- **Next:** o desfecho fecha o buraco de jogabilidade mais visível. O que sobra na linha "app de
+  ponta a ponta": calibrar o raio de 25 m **na rua**, com o aparelho na mão — segue sendo a única
+  constante do jogo escolhida por raciocínio e nunca validada em campo. Depois disso, contas e
+  login (que desbloqueiam `REQ-13` e o archive de `CHG-001..006`).
+
+- **Refs:** CHG-011, `packages/engine/src/outcome.ts`, `app/lib/features/outcome/`,
+  `lore/WIKI_SCHEMA.md## Páginas de revelação`.

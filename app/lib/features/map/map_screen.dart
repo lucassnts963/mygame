@@ -12,6 +12,7 @@ import '../accusation/accusation_screen.dart';
 import '../ar/investigate_screen.dart';
 import '../chat/chat_screen.dart';
 import '../notebook/notebook_view.dart';
+import '../outcome/outcome_screen.dart';
 import 'clue_card.dart';
 
 /// A tela principal: mapa, lista de pistas, caderno e personagens.
@@ -106,20 +107,35 @@ class _MapScreenState extends State<MapScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _refresh,
           ),
-          IconButton(
-            key: const Key('open-accusation'),
-            tooltip: 'Acusar',
-            icon: const Icon(Icons.gavel_outlined),
-            onPressed: _view.isFinished
-                ? null
-                : () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => AccusationScreen(
-                        api: widget.api,
-                        sessionId: _view.id,
-                        characters: _view.characters,
-                      ),
-                    )).then((_) => _refresh()),
-          ),
+          // Depois do fim, o mesmo canto da tela deixa de acusar e passa a relembrar. O botão
+          // cinza que sobrava ali era o jogo dizendo "acabou" sem dizer o que aconteceu.
+          if (_view.outcome != null)
+            IconButton(
+              key: const Key('open-outcome'),
+              tooltip: 'Ver o desfecho',
+              icon: const Icon(Icons.auto_stories_outlined),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => OutcomeScreen(
+                  caseTitle: _view.caseTitle,
+                  outcome: _view.outcome!,
+                ),
+              )),
+            )
+          else
+            IconButton(
+              key: const Key('open-accusation'),
+              tooltip: 'Acusar',
+              icon: const Icon(Icons.gavel_outlined),
+              onPressed: _view.isFinished
+                  ? null
+                  : () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => AccusationScreen(
+                          api: widget.api,
+                          sessionId: _view.id,
+                          characters: _view.characters,
+                        ),
+                      )).then((_) => _refresh()),
+            ),
         ],
       ),
       body: [_buildMapTab(), _buildNotebookTab(), _buildPeopleTab()][_tab],
@@ -141,6 +157,26 @@ class _MapScreenState extends State<MapScreen> {
 
     return Column(
       children: [
+        // Modo leitura: nada do que o jogador construiu é descartado, mas não há mais o que
+        // coletar. Dizer isso é melhor que oferecer um botão que o servidor vai recusar.
+        if (_view.isFinished)
+          MaterialBanner(
+            key: const Key('map-read-only'),
+            content: const Text('Caso encerrado. O caderno e as conversas continuam abertos.'),
+            actions: [
+              TextButton(
+                onPressed: _view.outcome == null
+                    ? null
+                    : () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => OutcomeScreen(
+                            caseTitle: _view.caseTitle,
+                            outcome: _view.outcome!,
+                          ),
+                        )),
+                child: const Text('Ver o desfecho'),
+              ),
+            ],
+          ),
         if (_locationDenied)
           const MaterialBanner(
             content: Text(
@@ -204,6 +240,7 @@ class _MapScreenState extends State<MapScreen> {
                       .map((clue) => ClueCard(
                             clue: clue,
                             position: _position,
+                            enabled: !_view.isFinished,
                             onInvestigate: () => _investigate(clue),
                           ))
                       .toList(),

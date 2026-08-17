@@ -138,6 +138,11 @@ OpenAI-compatible falso, em memória: testes determinísticos, sem rede e sem cu
 - **Chat sem streaming**: a resposta do personagem volta inteira. SSE fica para quando houver
   necessidade real de ver o texto aparecendo.
 - **Autenticação**: o MVP identifica a partida pelo id de sessão; não há login.
+- **Campos do schema sem consumidor**: `clues[].lore` e `agent.tools` são aceitos e lidos por
+  ninguém; `agent.lore` é validado mas **não** limita o que o personagem enxerga em partida (o
+  runtime indexa a lore inteira do módulo); `characters[].agent` é conferido pelo validador e
+  ignorado na amarração. Levantados na varredura do `CHG-011`, que também explica por que isso
+  falha em silêncio.
 - Sem multiplayer, sem marketplace de módulos, sem MCP externo — backlog dos requisitos 001.
 - AR sem detecção de plano (ARCore/ARKit) — decisão registrada em ADR-005. A câmera ao vivo
   entrou em `CHG-009`.
