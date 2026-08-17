@@ -2,12 +2,17 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { FetchLike } from "./agent/openai-client.ts";
 import type { ProviderConfig } from "./agent/types.ts";
 import type { ModuleRegistry } from "./repositories/module-registry.ts";
-import { createInMemorySessionRepository } from "./repositories/session-repository.ts";
+import {
+  createInMemorySessionRepository,
+  type SessionRepository,
+} from "./repositories/session-repository.ts";
 import { registerGameRoutes } from "./routes/game-routes.ts";
 import { GameError, createGameService } from "./services/game-service.ts";
 
 export interface AppOptions {
   readonly modules: ModuleRegistry;
+  /** Onde as partidas ficam. Sem isto, memória — que é como o jogo roda sem banco. */
+  readonly sessions?: SessionRepository;
   /** Provider padrão do servidor — o último degrau da cascata (REQ-12). */
   readonly defaultProvider?: ProviderConfig;
   readonly env?: Record<string, string | undefined>;
@@ -25,7 +30,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
 
   const game = createGameService({
     modules: options.modules,
-    sessions: createInMemorySessionRepository(),
+    sessions: options.sessions ?? createInMemorySessionRepository(),
     ...(options.defaultProvider ? { defaultProvider: options.defaultProvider } : {}),
     env: options.env ?? process.env,
     fetchImpl: options.fetchImpl ?? fetch,

@@ -22,10 +22,12 @@
     "skills:index": "node scripts/update-skills-index.mjs",
     "skills:index:check": "node scripts/update-skills-index.mjs --check",
     "session": "node scripts/session-context.mjs",
-    "release": "node scripts/cut-release.mjs"
+    "release": "node scripts/cut-release.mjs",
+    "migrate": "node --experimental-strip-types server/src/db/cli-migrate.ts"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.0",
     "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^5.7.2",
     "vitest": "^4.1.10"

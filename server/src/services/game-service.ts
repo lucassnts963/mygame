@@ -1,5 +1,4 @@
 import {
-  canCollect,
   collectClue,
   createGameState,
   distanceMeters,
@@ -64,8 +63,8 @@ export function createGameService(deps: GameServiceDeps) {
     return module;
   };
 
-  const requireSession = (id: string): GameSession => {
-    const session = deps.sessions.get(id);
+  const requireSession = async (id: string): Promise<GameSession> => {
+    const session = await deps.sessions.get(id);
     if (!session) throw new GameError(404, `sessão '${id}' não encontrada`);
     return session;
   };
@@ -119,24 +118,26 @@ export function createGameService(deps: GameServiceDeps) {
         clueCount: module.caseDefinition.clues.length,
       })),
 
-    start(moduleId: string, origin?: LatLng): SessionView {
+    async start(moduleId: string, origin?: LatLng): Promise<SessionView> {
       const module = requireModule(moduleId);
       const state = createGameState(module.caseDefinition, origin ? { origin } : {});
-      return view(deps.sessions.create(moduleId, state));
+      return view(await deps.sessions.create(moduleId, state));
     },
 
-    get: (sessionId: string, position?: LatLng) => view(requireSession(sessionId), position),
+    async get(sessionId: string, position?: LatLng): Promise<SessionView> {
+      return view(await requireSession(sessionId), position);
+    },
 
     /**
      * Coleta uma pista. **O servidor revalida a posição** — o cliente informa onde está, mas
      * quem decide é aqui (REQ-02, ADR-004).
      */
-    collect(
+    async collect(
       sessionId: string,
       clueId: string,
       position: LatLng,
-    ): { view: SessionView; verdict: CollectVerdict } {
-      const session = requireSession(sessionId);
+    ): Promise<{ view: SessionView; verdict: CollectVerdict }> {
+      const session = await requireSession(sessionId);
       const module = requireModule(session.moduleId);
 
       if (!module.caseDefinition.clues.some((clue) => clue.id === clueId)) {
@@ -151,12 +152,12 @@ export function createGameService(deps: GameServiceDeps) {
       }
 
       const updated = { ...session, state };
-      deps.sessions.save(updated);
+      await deps.sessions.save(updated);
       return { view: view(updated), verdict };
     },
 
     async chat(sessionId: string, characterId: string, message: string) {
-      const session = requireSession(sessionId);
+      const session = await requireSession(sessionId);
       const module = requireModule(session.moduleId);
 
       const agent = module.agents.get(characterId);
@@ -187,13 +188,16 @@ export function createGameService(deps: GameServiceDeps) {
       const conversations = new Map(session.conversations);
       conversations.set(characterId, result.conversation);
       const updated = { ...session, state: result.state, conversations };
-      deps.sessions.save(updated);
+      await deps.sessions.save(updated);
 
       return { reply: result.reply, revealedClues: result.revealedClues, view: view(updated) };
     },
 
-    accuse(sessionId: string, culprit: string): { view: SessionView; verdict: AccusationVerdict } {
-      const session = requireSession(sessionId);
+    async accuse(
+      sessionId: string,
+      culprit: string,
+    ): Promise<{ view: SessionView; verdict: AccusationVerdict }> {
+      const session = await requireSession(sessionId);
       const module = requireModule(session.moduleId);
 
       const { state, verdict } = judgeAccusation(module.caseDefinition, session.state, culprit);
@@ -202,19 +206,12 @@ export function createGameService(deps: GameServiceDeps) {
       }
 
       const updated = { ...session, state };
-      deps.sessions.save(updated);
+      await deps.sessions.save(updated);
 
       // Errar ou acusar sem sustentação é desfecho do jogo, não erro do cliente — mas precisa
       // de status distinto para o app não celebrar um veredito negativo.
       if (!verdict.ok) throw new GameError(409, "acusação recusada", { verdict, view: view(updated) });
       return { view: view(updated), verdict };
-    },
-
-    /** Exposto para os testes de regra de coleta sem efeito colateral. */
-    preview: (sessionId: string, clueId: string, position?: LatLng): CollectVerdict => {
-      const session = requireSession(sessionId);
-      const module = requireModule(session.moduleId);
-      return canCollect(module.caseDefinition, session.state, clueId, position);
     },
   };
 

@@ -15,13 +15,16 @@ export function registerGameRoutes(app: FastifyInstance, game: GameService): voi
       throw new GameError(400, "informe 'moduleId'");
     }
     const origin = parseOptionalLatLng(body.origin);
-    return reply.code(201).send(game.start(body.moduleId, origin));
+    return reply.code(201).send(await game.start(body.moduleId, origin));
   });
 
   app.get("/sessions/:id", async (request) => {
     const { id } = request.params as { id: string };
     const query = request.query as { lat?: string; lng?: string };
-    return game.get(id, parseOptionalLatLng(query.lat && query.lng ? { lat: query.lat, lng: query.lng } : undefined));
+    return game.get(
+      id,
+      parseOptionalLatLng(query.lat && query.lng ? { lat: query.lat, lng: query.lng } : undefined),
+    );
   });
 
   app.post("/sessions/:id/clues/:clueId/collect", async (request) => {
@@ -29,7 +32,7 @@ export function registerGameRoutes(app: FastifyInstance, game: GameService): voi
     const position = parseOptionalLatLng(request.body);
     if (!position) throw new GameError(400, "informe a posição como { lat, lng }");
 
-    const { view, verdict } = game.collect(id, clueId, position);
+    const { view, verdict } = await game.collect(id, clueId, position);
     return { ...view, verdict };
   });
 
@@ -51,7 +54,7 @@ export function registerGameRoutes(app: FastifyInstance, game: GameService): voi
       throw new GameError(400, "informe 'culprit'");
     }
 
-    const { view, verdict } = game.accuse(id, body.culprit);
+    const { view, verdict } = await game.accuse(id, body.culprit);
     return { ...view, verdict };
   });
 }
