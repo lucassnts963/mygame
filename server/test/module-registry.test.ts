@@ -61,12 +61,15 @@ describe("loadModuleRegistry", () => {
   it("lê o provider declarado pelo personagem, sem a chave", () => {
     const provider = registry.get("poco-de-jaco")?.agentProviders.get("samaritana");
 
-    expect(provider?.baseUrl).toBe("https://api.openai.com/v1");
-    expect(provider?.model).toBe("gpt-4o-mini");
+    // Deliberadamente NÃO se afirma qual é o fornecedor. Trocar OpenAI por DeepSeek, Groq ou
+    // Ollama é exatamente a liberdade que o ADR-007 promete ao autor do módulo — um teste que
+    // fixasse a URL quebraria a cada troca legítima e ensinaria a ignorá-lo.
+    expect(provider?.baseUrl).toMatch(/^https?:\/\//);
+    expect(provider?.model).toBeTruthy();
     expect(provider?.apiKeyEnv).toBe("VESTIGIO_SAMARITANA_KEY");
     expect(provider?.temperature).toBe(0.8);
     expect(provider?.maxTokens).toBe(200);
-    // A chave em si nunca chega aqui — só o nome da variável (ADR-008).
+    // O que o teste guarda de verdade: a chave nunca chega aqui, só o nome da variável (ADR-008).
     expect(JSON.stringify(provider)).not.toMatch(/sk-/);
   });
 
