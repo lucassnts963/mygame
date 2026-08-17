@@ -135,6 +135,20 @@ describe("toCaseDefinition", () => {
     });
   });
 
+  it("TEST-03: mapeia a description da pista — o texto do vestígio", () => {
+    const doc = validCase();
+    (doc["clues"] as Record<string, unknown>[])[0]!["description"] =
+      "Um cântaro de barro, cheio, largado na borda do poço.";
+
+    const def = toCaseDefinition(doc as never);
+    expect(def.clues[0]?.description).toContain("cântaro de barro");
+  });
+
+  it("TEST-04: não inventa description quando o autor não escreveu uma", () => {
+    const def = toCaseDefinition(validCase() as never);
+    expect(def.clues[0]).not.toHaveProperty("description");
+  });
+
   it("TEST-18: preenche listas ausentes com vazio", () => {
     const doc = validCase();
     (doc["clues"] as Record<string, unknown>[])[1] = { id: "pista-solta", title: "Solta" };

@@ -198,10 +198,30 @@ describe("notebook", () => {
       {
         clueId: "pista-cantaro",
         title: "O cântaro abandonado",
+        description: "Um cântaro de barro, cheio, largado na borda do poço.",
         unlockedClues: ["pista-pegadas"],
         unlockedCharacters: ["samaritana"],
       },
     ]);
+  });
+
+  it("TEST-01: leva a descrição da pista para o caderno", () => {
+    // O texto do vestígio é o conteúdo do jogo. Sem ele, o jogador anda até o lugar e recebe
+    // um título de quatro palavras — toda a escrita do caso fica invisível.
+    const state = collectClue(def, createGameState(def), "pista-cantaro", BARCARENA).state;
+    expect(notebook(def, state)[0]?.description).toContain("cântaro de barro");
+  });
+
+  it("TEST-02: uma pista sem descrição não ganha campo vazio", () => {
+    const afterCantaro = collectClue(def, createGameState(def), "pista-cantaro", BARCARENA).state;
+    const state = collectClue(def, afterCantaro, "pista-pegadas", {
+      lat: -1.5095,
+      lng: -48.624,
+    }).state;
+
+    const pegadas = notebook(def, state).find((e) => e.clueId === "pista-pegadas");
+    expect(pegadas).toBeDefined();
+    expect(pegadas).not.toHaveProperty("description");
   });
 
   it("TEST-05: começa vazio", () => {

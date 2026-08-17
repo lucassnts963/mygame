@@ -62,6 +62,17 @@ describe("módulo piloto — poco-de-jaco", () => {
     }
   });
 
+  it("TEST-07: TODA pista do caso piloto tem texto para o jogador ler", () => {
+    // Sem descrição, o jogador anda até o lugar e recebe um título de quatro palavras.
+    // O texto do vestígio é o conteúdo do jogo, não um detalhe de conteúdo opcional.
+    const caseDef = toCaseDefinition(loadModule(PILOT).caseDocument as CaseDocument);
+
+    for (const clue of caseDef.clues) {
+      expect(clue.description, `pista '${clue.id}' sem descrição`).toBeTruthy();
+      expect(clue.description!.length).toBeGreaterThan(40);
+    }
+  });
+
   it("acertar o culpado sem a sustentação não resolve o caso", () => {
     // A regra que dá identidade ao jogo, verificada no conteúdo real: com dois personagens,
     // o palpite acerta metade das vezes — a dedução é que tem de ser cobrada.

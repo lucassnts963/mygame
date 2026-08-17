@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_api_client.dart';
 import '../../core/models.dart';
+import '../notebook/clue_reveal_card.dart';
 
 class _Line {
   final bool fromPlayer;
@@ -32,6 +33,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _lines = <_Line>[];
+  final _revealed = <NotebookEntry>[];
   bool _waiting = false;
   String? _error;
 
@@ -62,12 +64,14 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       widget.onStateChanged(result.view);
 
-      // Uma pista arrancada em conversa merece destaque: é o momento em que o
-      // interrogatório virou progresso.
+      // Uma pista arrancada em conversa é o momento em que o interrogatório virou progresso —
+      // e o jogador precisa LER o que descobriu, não receber um aviso de que algo aconteceu.
       if (result.revealedClues.isNotEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Você anotou algo novo no caderno.')),
-        );
+        setState(() {
+          _revealed.addAll(
+            result.view.notebook.where((e) => result.revealedClues.contains(e.clueId)),
+          );
+        });
       }
     } on GameApiException catch (e) {
       if (!mounted) return;
@@ -131,6 +135,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
           ),
+          // As pistas arrancadas nesta conversa ficam à vista enquanto ela dura.
+          for (final entry in _revealed)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ClueRevealCard(
+                title: entry.title,
+                description: entry.description,
+                icon: Icons.auto_stories_outlined,
+              ),
+            ),
           if (_waiting) const LinearProgressIndicator(),
           Padding(
             padding: const EdgeInsets.all(12),

@@ -164,6 +164,9 @@ export function notebook(caseDef: CaseDefinition, state: GameState): readonly No
     entries.push({
       clueId: clue.id,
       title: clue.title,
+      // Omitido quando não existe, em vez de virar string vazia: "sem descrição" e "descrição
+      // em branco" são coisas diferentes para quem desenha a tela.
+      ...(clue.description ? { description: clue.description } : {}),
       unlockedClues: caseDef.clues.filter((c) => c.requires.includes(clue.id)).map((c) => c.id),
       unlockedCharacters: [...clue.unlocksCharacters],
     });

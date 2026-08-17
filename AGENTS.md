@@ -130,13 +130,17 @@ OpenAI-compatible falso, em memória: testes determinísticos, sem rede e sem cu
 
 ## Known Gaps
 
-- **Persistência**: sessões vivem em memória e se perdem ao reiniciar o servidor. O repositório
-  já é uma interface, então o Postgres entra sem tocar em rotas nem no motor.
+- **Persistência**: entregue em `CHG-007`. Com `DATABASE_URL`, as partidas sobrevivem ao reinício;
+  sem ela, o jogo roda em memória (é como se joga sem instalar banco).
+- **Contas e login**: adiados por decisão de rumo — a prioridade é jogabilidade. Sem eles,
+  `REQ-13` (chave do jogador cifrada em repouso) segue `Partial` e o archive das specs 001–006
+  continua bloqueado pelo gate de alignment.
 - **Chat sem streaming**: a resposta do personagem volta inteira. SSE fica para quando houver
   necessidade real de ver o texto aparecendo.
 - **Autenticação**: o MVP identifica a partida pelo id de sessão; não há login.
 - Sem multiplayer, sem marketplace de módulos, sem MCP externo — backlog dos requisitos 001.
-- AR sem detecção de plano (ARCore/ARKit) — decisão registrada em ADR-005.
+- AR sem detecção de plano (ARCore/ARKit) — decisão registrada em ADR-005. A câmera ao vivo
+  entrou em `CHG-009`.
 - **Não validado em campo**: o raio de 25 m foi escolhido por raciocínio sobre erro típico de GPS,
   não por playtest na rua. É a primeira coisa a calibrar com o aparelho na mão.
 

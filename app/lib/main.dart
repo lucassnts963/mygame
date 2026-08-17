@@ -100,7 +100,20 @@ class _CaseListScreenState extends State<CaseListScreen> {
                       child: ListTile(
                         key: Key('module-${module.id}'),
                         title: Text(module.title),
-                        subtitle: Text(module.synopsis ?? '${module.clueCount} pistas'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            // A sinopse é o convite: é ela que faz alguém querer sair de casa.
+                            if (module.synopsis != null) Text(module.synopsis!),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${module.clueCount} pistas',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                        isThreeLine: module.synopsis != null,
                         trailing: const Icon(Icons.play_arrow),
                         onTap: _starting ? null : () => _start(module),
                       ),

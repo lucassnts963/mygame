@@ -5,6 +5,9 @@ class Clue {
   final String id;
   final String title;
 
+  /// O texto do vestígio — o que o detetive lê ao encontrá-lo. É o conteúdo do jogo.
+  final String? description;
+
   /// `null` para pista que não está no mapa — ela só sai da boca de um personagem.
   final LatLng? anchor;
   final double? radiusMeters;
@@ -15,6 +18,7 @@ class Clue {
   const Clue({
     required this.id,
     required this.title,
+    this.description,
     this.anchor,
     this.radiusMeters,
     this.distanceMeters,
@@ -27,6 +31,7 @@ class Clue {
     return Clue(
       id: json['id'] as String,
       title: json['title'] as String,
+      description: json['description'] as String?,
       anchor: anchor == null
           ? null
           : LatLng((anchor['lat'] as num).toDouble(), (anchor['lng'] as num).toDouble()),
@@ -40,12 +45,14 @@ class Clue {
 class NotebookEntry {
   final String clueId;
   final String title;
+  final String? description;
   final List<String> unlockedClues;
   final List<String> unlockedCharacters;
 
   const NotebookEntry({
     required this.clueId,
     required this.title,
+    this.description,
     required this.unlockedClues,
     required this.unlockedCharacters,
   });
@@ -53,6 +60,7 @@ class NotebookEntry {
   factory NotebookEntry.fromJson(Map<String, dynamic> json) => NotebookEntry(
         clueId: json['clueId'] as String,
         title: json['title'] as String,
+        description: json['description'] as String?,
         unlockedClues: (json['unlockedClues'] as List? ?? []).cast<String>(),
         unlockedCharacters: (json['unlockedCharacters'] as List? ?? []).cast<String>(),
       );

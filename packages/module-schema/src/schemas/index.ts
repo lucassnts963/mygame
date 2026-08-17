@@ -43,6 +43,9 @@ export function toCaseDefinition(document: CaseDocument): CaseDefinition {
     clues: document.clues.map((clue) => ({
       id: clue.id,
       title: clue.title,
+      // Sem esta linha o texto do vestígio era lido do YAML, validado pelo schema e descartado
+      // aqui — toda a escrita do caso ficava invisível para quem joga.
+      ...(clue.description ? { description: clue.description } : {}),
       requires: [...(clue.requires ?? [])],
       // Uma pista sem âncora não ganha âncora vazia: ela simplesmente não tem lugar no mundo,
       // e é isso que diz ao motor que só um personagem pode concedê-la.

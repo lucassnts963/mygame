@@ -25,6 +25,14 @@ export interface Anchor {
 export interface ClueDefinition {
   readonly id: string;
   readonly title: string;
+  /**
+   * O texto do vestígio — o que o detetive lê ao encontrá-lo.
+   *
+   * Isto é dado de **domínio**, não de apresentação: é o conteúdo do caso, e é o motor quem
+   * monta o caderno. Deixá-lo fora daqui obrigaria a API a reabrir o módulo só para buscar o
+   * texto, criando duas fontes para o mesmo dado.
+   */
+  readonly description?: string;
   /** Pistas que precisam estar no caderno antes desta ficar alcançável. */
   readonly requires: readonly string[];
   readonly anchor?: Anchor;
@@ -122,6 +130,7 @@ export interface GraphIssue {
 export interface NotebookEntry {
   readonly clueId: string;
   readonly title: string;
+  readonly description?: string;
   readonly unlockedClues: readonly string[];
   readonly unlockedCharacters: readonly string[];
 }

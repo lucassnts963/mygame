@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models.dart';
 
-/// O caderno do detetive: o que foi descoberto, e o que cada descoberta abriu.
+/// O caderno do detetive: o que foi descoberto, o que aquilo dizia, e o que abriu.
 class NotebookView extends StatelessWidget {
   final List<NotebookEntry> entries;
 
@@ -30,6 +30,8 @@ class NotebookView extends StatelessWidget {
       separatorBuilder: (_, _) => const Divider(height: 24),
       itemBuilder: (context, index) {
         final entry = entries[index];
+        final description = entry.description?.trim();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -45,6 +47,13 @@ class NotebookView extends StatelessWidget {
                 ),
               ],
             ),
+            // O texto do vestígio é o que o detetive vai reler para deduzir. Sem ele, o caderno
+            // vira uma lista de títulos e a dedução fica impossível de fazer com a memória.
+            if (description != null && description.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 40, top: 8),
+                child: Text(description, style: Theme.of(context).textTheme.bodyMedium),
+              ),
             if (entry.unlockedCharacters.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 40, top: 8),

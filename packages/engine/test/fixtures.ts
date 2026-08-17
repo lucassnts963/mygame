@@ -16,6 +16,7 @@ export function solvableCase(): CaseDefinition {
       {
         id: "pista-cantaro",
         title: "O cântaro abandonado",
+        description: "Um cântaro de barro, cheio, largado na borda do poço.",
         requires: [],
         anchor: { position: BARCARENA, radiusMeters: 25 },
         unlocksCharacters: ["samaritana"],

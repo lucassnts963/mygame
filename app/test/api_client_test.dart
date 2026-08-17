@@ -15,6 +15,7 @@ const sessionJson = {
     {
       'id': 'pista-cantaro',
       'title': 'O cântaro abandonado',
+      'description': 'Um cântaro de barro, cheio, largado na borda do poço.',
       'anchor': {'lat': -1.5089, 'lng': -48.6247, 'radiusMeters': 25},
       'distanceMeters': 218,
     },
@@ -24,6 +25,7 @@ const sessionJson = {
     {
       'clueId': 'pista-cantaro',
       'title': 'O cântaro abandonado',
+      'description': 'Um cântaro de barro, cheio, largado na borda do poço.',
       'unlockedClues': ['pista-hora-errada'],
       'unlockedCharacters': ['samaritana'],
     }
@@ -67,6 +69,25 @@ void main() {
       expect(clue.anchor, const LatLng(-1.5089, -48.6247));
       expect(clue.radiusMeters, 25);
       expect(clue.distanceMeters, 218);
+    });
+
+    test('TEST-08: Clue lê o texto do vestígio', () {
+      final clue = Clue.fromJson(
+        (sessionJson['visibleClues'] as List)[0] as Map<String, dynamic>,
+      );
+      expect(clue.description, contains('cântaro de barro'));
+    });
+
+    test('TEST-08: pista sem descrição volta com null, não string vazia', () {
+      final clue = Clue.fromJson(
+        (sessionJson['visibleClues'] as List)[1] as Map<String, dynamic>,
+      );
+      expect(clue.description, isNull);
+    });
+
+    test('TEST-09: NotebookEntry lê o texto do vestígio', () {
+      final view = SessionView.fromJson(sessionJson);
+      expect(view.notebook.first.description, contains('cântaro de barro'));
     });
 
     test('TEST-09: uma pista sem âncora não ganha coordenada inventada', () {

@@ -86,6 +86,7 @@ export function createGameService(deps: GameServiceDeps) {
         return {
           id: clue.id,
           title: clue.title,
+          ...(clue.description ? { description: clue.description } : {}),
           ...(anchor
             ? {
                 anchor: {
