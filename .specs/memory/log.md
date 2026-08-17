@@ -85,3 +85,46 @@ Template — copy, set today's date, append at the bottom:
 
 - **Refs:** CHG-001..006, requisitos 001, ADR-001..009, commits `1a9ec7c`, `72f9480`, `324fc5f`,
   `922c1f9`, `5dde59a`, `415f616`, `e9fb86b`, `41a8988`.
+
+## 2026-08-17 — Persistência, o texto que não chegava, e pesquisa de monetização
+
+- **Did:** `CHG-007` (Postgres, com prova de `kill -9`), `CHG-009` (câmera ao vivo + o texto das
+  pistas chegando à tela), revisão de alinhamento dos requisitos 001 com veredito **`misaligned`**,
+  spec retroativa `CHG-006`, `schema-target.md` preenchido, e o documento de requisitos 002
+  (casos de história local com patrocínio) com anexo de pesquisa de mercado.
+
+- **Learned:**
+  1. **O conteúdo escrito do jogo nunca chegava ao jogador.** `case.yaml` tem `description` por
+     pista, o schema aceitava, o loader lia — e `toCaseDefinition` descartava, porque
+     `ClueDefinition` não tinha o campo. Toda a escrita dos casos estava no repositório e
+     invisível. Lição geral: **um campo aceito pelo schema e não mapeado no domínio some sem
+     erro nenhum.** Vale procurar outros.
+  2. **`citext` não serve em schema-por-teste.** Extensão é instalada em um schema e fica
+     invisível nos outros; o `IF NOT EXISTS` da segunda execução pula e o tipo some. Índice único
+     em `lower(email)` dá a mesma garantia sem extensão — e funciona onde o app não é superusuário.
+  3. **Teste que fixa fornecedor quebra a cada troca legítima.** Um assert com a URL da OpenAI
+     quebrou quando o módulo mudou para DeepSeek. O teste estava errado, não a mudança: trocar de
+     provider é a liberdade que o ADR-007 promete.
+  4. **`&&` com `grep` engole exit code.** O gate de cobertura reprovou em 89,4% e a cadeia
+     continuou como se estivesse tudo bem. Conferir código de saída explicitamente quando o
+     comando é um gate.
+  5. **Pesquisa de monetização — impedimento jurídico achado:** num caso de história local, um
+     estabelecimento real apontado como culpado é risco de dano à imagem. Casos bíblicos acusam
+     gente de dois mil anos atrás; casos da cidade acusam pessoas com descendentes vivos. Vira
+     `REQ-23`/`REQ-30`: regra de validador, não recomendação.
+  6. **Requisitos e specs compartilham um espaço de numeração.** Numerei o documento novo como
+     `requirements/002-` e o `check-consistency` reprovou: ele pareia pelo número, então o 002
+     colidiu com `changes/002-module-schema` e passou a exigir que os `REQ` daquela spec
+     existissem no documento novo. Renumerado para `010`, que é o próximo livre depois das specs.
+  7. **A Questo prova que "usuário cria módulos" é modelo de negócio**, não só recurso: 30 mil
+     criadores com repartição de receita. A arquitetura de bundle declarativo já construída aqui
+     serve a isso sem mudança.
+
+- **Next:** o archive de `CHG-001..006` continua **bloqueado** — `REQ-13` (chave cifrada em
+  repouso) só fecha com contas, adiadas por decisão de rumo. Na jogabilidade, o buraco mais
+  visível é a **tela de fim de caso**: hoje a acusação dá veredito e a partida simplesmente para,
+  sem epílogo nem revelação. Nos requisitos 002, o próximo passo não é código: é conversar com
+  cinco comerciantes e com a Secretaria de Turismo (premissas A-20 e A-23).
+
+- **Refs:** CHG-007, CHG-009, requisitos 010, `alignment-review.md` de 001, commits `020b059`,
+  `6b59efc`, `d44330f`.
